@@ -1,4 +1,4 @@
-package com.wangwenjun.guava.utilites;
+package com.wangwenjun.guava.utilities;
 
 import com.google.common.base.Splitter;
 import org.junit.Test;
