@@ -6,11 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="guava_programming" />
+        <module name="my_servant" />
+        <module name="my_service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="guava_programming" target="1.8" />
+      <module name="my_servant" target="1.8" />
+      <module name="my_service" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

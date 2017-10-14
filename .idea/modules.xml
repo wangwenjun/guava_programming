@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/guava_programming.iml" filepath="$PROJECT_DIR$/guava_programming.iml" />
+      <module fileurl="file://$PROJECT_DIR$/my_servant/my_servant.iml" filepath="$PROJECT_DIR$/my_servant/my_servant.iml" />
+      <module fileurl="file://$PROJECT_DIR$/my_service/my_service.iml" filepath="$PROJECT_DIR$/my_service/my_service.iml" />
     </modules>
   </component>
 </project>

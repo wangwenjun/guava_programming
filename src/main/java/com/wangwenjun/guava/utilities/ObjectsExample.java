@@ -12,7 +12,7 @@ import java.util.Calendar;
  * @Date:2017/10/7
  * @QQ: 532500648
  ***************************************/
-public class ObjectsTest {
+public class ObjectsExample {
 
     public static void main(String[] args) {
         final Guava guava = new Guava("Google", "23.0", Calendar.getInstance());
