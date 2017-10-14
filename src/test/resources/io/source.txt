@@ -1,0 +1,5 @@
+today we will share the guava io knowledge.
+but only for the basic usage. if you wanted to get the more details information
+please read the guava document or source code.
+
+The guava source code is very cleanly and nice.
