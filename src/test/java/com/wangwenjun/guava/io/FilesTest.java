@@ -14,10 +14,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import static com.google.common.io.FileWriteMode.APPEND;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
