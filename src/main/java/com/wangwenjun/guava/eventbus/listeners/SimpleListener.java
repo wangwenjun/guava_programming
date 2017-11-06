@@ -49,4 +49,22 @@ public class SimpleListener
             LOGGER.info("Received event [{}] and will take a action2", event);
         }
     }
+
+    @Subscribe
+    public void doAction3(final String event)
+    {
+        if (LOGGER.isInfoEnabled())
+        {
+            LOGGER.info("Received event [{}] and will take a action2", event);
+        }
+    }
+
+    @Subscribe
+    public void doAction4(final String event)
+    {
+        if (LOGGER.isInfoEnabled())
+        {
+            LOGGER.info("Received event [{}] and will take a action2", event);
+        }
+    }
 }
