@@ -2,7 +2,6 @@ package com.wangwenjun.guava.concurrent;
 
 import com.google.common.util.concurrent.RateLimiter;
 
-import java.sql.Time;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
