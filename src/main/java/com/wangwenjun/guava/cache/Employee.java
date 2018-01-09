@@ -13,6 +13,7 @@ public class Employee
     private final String name;
     private final String dept;
     private final String empID;
+    private final byte[] data = new byte[1024 * 1024];
 
     public Employee(String name, String dept, String empID)
     {
@@ -42,5 +43,11 @@ public class Employee
         return MoreObjects.toStringHelper(this)
                 .add("Name", this.getName()).add("Department", getDept())
                 .add("EmployeeID", this.getEmpID()).toString();
+    }
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        System.out.println("The name " + getName() + " will be GC.");
     }
 }
