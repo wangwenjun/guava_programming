@@ -1,21 +1,20 @@
 package com.wangwenjun.guava.cache;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.cache.*;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /***************************************
  * @author:Alex Wang
@@ -27,16 +26,24 @@ public class CacheLoaderTest3
 {
 
     @Test
-    public void testLoadNullValue() throws ExecutionException
+    public void testLoadNullValue()
     {
-        CacheLoader<String, Employee> loader =
-                CacheLoader.from(k -> k.equals("null") ? null : new Employee(k, k, k));
-        LoadingCache<String, Employee> cache = CacheBuilder.newBuilder().build(loader);
-        Employee alex = cache.get("alex");
-        assertThat(alex, notNullValue());
+        CacheLoader<String, Employee> cacheLoader = CacheLoader
+                .from(k -> k.equals("null") ? null : new Employee(k, k, k));
+        LoadingCache<String, Employee> loadingCache = CacheBuilder.newBuilder().build(cacheLoader);
 
-        Employee result = cache.getUnchecked("null");
-        assertThat(result, nullValue());
+        Employee alex = loadingCache.getUnchecked("Alex");
+
+        assertThat(alex.getName(), equalTo("Alex"));
+        try
+        {
+            assertThat(loadingCache.getUnchecked("null"), nullValue());
+            fail("should not process to here.");
+        } catch (Exception e)
+        {
+//            (expected = CacheLoader.InvalidCacheLoadException.class)
+            assertThat(e instanceof CacheLoader.InvalidCacheLoadException, equalTo(true));
+        }
     }
 
     @Test
@@ -54,90 +61,81 @@ public class CacheLoaderTest3
             }
         };
 
-        LoadingCache<String, Optional<Employee>> cache = CacheBuilder.<String, Employee>newBuilder().build(loader);
-        Employee alex = cache.getUnchecked("alex").get();
-        assertThat(alex, notNullValue());
-
-
+        LoadingCache<String, Optional<Employee>> cache = CacheBuilder.newBuilder().build(loader);
+        assertThat(cache.getUnchecked("Alex").get(), notNullValue());
         assertThat(cache.getUnchecked("null").orNull(), nullValue());
+
+        Employee def = cache.getUnchecked("null").or(new Employee("default", "default", "default"));
+        assertThat(def.getName().length(), equalTo(7));
     }
+
 
     @Test
     public void testCacheRefresh() throws InterruptedException
     {
-        CacheLoader<String, Long> loader = CacheLoader.from(k ->
-        {
-            System.out.println("===");
-            return System.currentTimeMillis();
-        });
+        AtomicInteger counter = new AtomicInteger(0);
+        CacheLoader<String, Long> cacheLoader = CacheLoader
+                .from(k ->
+                {
+                    counter.incrementAndGet();
+                    return System.currentTimeMillis();
+                });
+
         LoadingCache<String, Long> cache = CacheBuilder.newBuilder()
-//                .refreshAfterWrite(1, TimeUnit.SECONDS)
-                .build(loader);
+//                .refreshAfterWrite(2, TimeUnit.SECONDS)
+                .build(cacheLoader);
+
         Long result1 = cache.getUnchecked("Alex");
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(3);
         Long result2 = cache.getUnchecked("Alex");
-        System.out.println(result1);
-        System.out.println(result2);
+        assertThat(counter.get(), equalTo(1));
+//        assertThat(result1.longValue() != result2.longValue(), equalTo(true));
     }
 
     @Test
     public void testCachePreLoad()
     {
-        CacheLoader<String, String> loader;
-        loader = new CacheLoader<String, String>()
+        CacheLoader<String, String> loader = CacheLoader.from(String::toUpperCase);
+        LoadingCache<String, String> cache = CacheBuilder.newBuilder().build(loader);
+
+        Map<String, String> preData = new HashMap<String, String>()
         {
-            @Override
-            public String load(String key)
             {
-                return key.toUpperCase();
+                put("alex", "ALEX");
+                put("hello", "hello");
             }
         };
 
-        LoadingCache<String, String> cache;
-        cache = CacheBuilder.newBuilder().build(loader);
-
-        Map<String, String> map = new HashMap<>();
-        map.put("first", "first");
-        map.put("second", "SECOND");
-        cache.putAll(map);
-
+        cache.putAll(preData);
         assertThat(cache.size(), equalTo(2L));
-        assertThat(cache.getUnchecked("first"), equalTo("first"));
+        assertThat(cache.getUnchecked("alex"), equalTo("ALEX"));
+        assertThat(cache.getUnchecked("hello"), equalTo("hello"));
     }
-
 
     @Test
-    public void whenEntryRemovedFromCache_thenNotify() {
-        CacheLoader<String, String> loader;
-        loader = new CacheLoader<String, String>() {
-            @Override
-            public String load(final String key) {
-                return key.toUpperCase();
+    public void testCacheRemovedNotification()
+    {
+        CacheLoader<String, String> loader = CacheLoader.from(String::toUpperCase);
+        RemovalListener<String, String> listener = notification ->
+        {
+            if (notification.wasEvicted())
+            {
+                RemovalCause cause = notification.getCause();
+                assertThat(cause, is(RemovalCause.SIZE));
+                assertThat(notification.getKey(), equalTo("Alex"));
             }
         };
 
-        RemovalListener<String, String> listener;
-        listener = new RemovalListener<String, String>() {
-            @Override
-            public void onRemoval(RemovalNotification<String, String> n){
-                if (n.wasEvicted()) {
-                    String cause = n.getCause().name();
-                    assertEquals(RemovalCause.SIZE.toString(),cause);
-                }
-            }
-        };
-
-        LoadingCache<String, String> cache;
-        cache = CacheBuilder.newBuilder()
+        LoadingCache<String, String> cache = CacheBuilder.newBuilder()
+                //
                 .maximumSize(3)
+                //
                 .removalListener(listener)
+                //
                 .build(loader);
-
-        cache.getUnchecked("first");
-        cache.getUnchecked("second");
-        cache.getUnchecked("third");
-        cache.getUnchecked("last");
-        assertEquals(3, cache.size());
+        cache.getUnchecked("Alex");
+        cache.getUnchecked("Eachur");
+        cache.getUnchecked("Jack");
+        cache.getUnchecked("Jenny");
     }
-
 }
