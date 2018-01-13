@@ -8,7 +8,7 @@ import static org.junit.Assert.assertThat;
 
 /***************************************
  * @author:Alex Wang
- * @Date:2018/1/11
+ * @Date:2018/1/13
  * QQ: 532500648
  * QQ群:463962286
  ***************************************/
@@ -19,14 +19,37 @@ public class CacheLoaderTest4
     public void testCacheStat()
     {
         CacheLoader<String, String> loader = CacheLoader.from(String::toUpperCase);
-        LoadingCache<String, String> cache = CacheBuilder.newBuilder().recordStats().build(loader);
+        LoadingCache<String, String> cache = CacheBuilder.newBuilder().maximumSize(5).recordStats().build(loader);
+        assertCache(cache);
+    }
 
+    @Test
+    public void testCacheSpec()
+    {
+        String spec = "maximumSize=5,recordStats";
+        CacheBuilderSpec builderSpec = CacheBuilderSpec.parse(spec);
+        CacheLoader<String, String> loader = CacheLoader.from(String::toUpperCase);
+        LoadingCache<String, String> cache = CacheBuilder.from(builderSpec).build(loader);
+
+        assertCache(cache);
+    }
+
+    private void assertCache(LoadingCache<String, String> cache)
+    {
+        assertThat(cache.getUnchecked("alex"), equalTo("ALEX"));//ALEX
         CacheStats stats = cache.stats();
-        cache.getUnchecked("Alex");
-        assertThat(stats.missCount(),equalTo(1));
+        System.out.println(stats.hashCode());
+        assertThat(stats.hitCount(), equalTo(0L));
+        assertThat(stats.missCount(), equalTo(1L));
 
-        String configString = "concurrencyLevel=10,refreshAfterWrite=5s";
-        CacheBuilderSpec spec = CacheBuilderSpec.parse(configString);
-        CacheBuilder.from(spec);
+        assertThat(cache.getUnchecked("alex"), equalTo("ALEX"));
+
+        stats = cache.stats();
+        System.out.println(stats.hashCode());
+        assertThat(stats.hitCount(), equalTo(1L));
+        assertThat(stats.missCount(), equalTo(1L));
+
+        System.out.println(stats.missRate());
+        System.out.println(stats.hitRate());
     }
 }
