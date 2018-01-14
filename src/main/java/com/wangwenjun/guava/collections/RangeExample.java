@@ -8,4 +8,5 @@ package com.wangwenjun.guava.collections;
  ***************************************/
 public class RangeExample
 {
+
 }
