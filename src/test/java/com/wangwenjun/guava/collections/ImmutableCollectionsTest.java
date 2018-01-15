@@ -2,16 +2,14 @@ package com.wangwenjun.guava.collections;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
+import static junit.framework.Assert.fail;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 
 /***************************************
  * @author:Alex Wang
@@ -22,60 +20,45 @@ import static org.junit.Assert.*;
 public class ImmutableCollectionsTest
 {
 
-    @Test
-    public void test()
+    @Test(expected = UnsupportedOperationException.class)
+    public void testOf()
     {
-        ImmutableList<Integer> list = ImmutableList.of(1, 2, 3, 4, 5, 6);
-        System.out.println(list);
-        list.add(7);
-
-        System.out.println(list);
+        ImmutableList<Integer> list = ImmutableList.of(1, 2, 3);
+        assertThat(list, notNullValue());
+        list.add(4);
+        fail();
     }
 
     @Test
     public void testCopy()
     {
         Integer[] array = {1, 2, 3, 4, 5};
-        List<Integer> list = ImmutableList.copyOf(array);
+        System.out.println(ImmutableList.copyOf(array));
+    }
+
+    @Test
+    public void testBuilder()
+    {
+        ImmutableList<Integer> list = ImmutableList.<Integer>builder()
+                .add(1)
+                .add(2, 3, 4).addAll(Arrays.asList(5, 6))
+                .build();
         System.out.println(list);
     }
 
     @Test
-    public void testBuild()
+    public void testImmutableMap()
     {
-        ImmutableList<Object> result = ImmutableList.builder().add(1)
-                .add(2).add(4, 5, 6).build();
-        System.out.println(result);
-    }
-
-    @Test
-    public void testMap()
-    {
-        ImmutableMap<String, String> map = ImmutableMap.of("Java", "1.8");
+        ImmutableMap<String, String> map = ImmutableMap.<String, String>builder().put("Oracle", "12c")
+                .put("Mysql", "7.0").build();
         System.out.println(map);
-    }
-
-    @Test
-    public void testOrder()
-    {
-        /*List<Integer> toSort = Arrays.asList(1, 2, 3, 4, null, 6,0);
-        Collections.sort(toSort);
-        System.out.println(toSort);*/
-        List<Integer> toSort = Arrays.asList(1, 2, 3, 4, null, 6,0);
-        Collections.sort(toSort,Ordering.natural().nullsFirst());
-        System.out.println(toSort);
-
-        Collections.sort(toSort,Ordering.natural().nullsLast());
-        System.out.println(toSort);
-
-        List<Integer> list = Arrays.asList(3, 5, 4, 1, 2);
-        Collections.sort(list,Ordering.natural());
-        System.out.println(list);
-
-        assertThat(Ordering.natural().isOrdered(list),is(true));
-
-
-        Collections.sort(list,Ordering.natural().reverse());
-        System.out.println(list);
+        try
+        {
+            map.put("Scala", "2.3.0");
+            fail();
+        } catch (Exception e)
+        {
+            assertThat(e instanceof UnsupportedOperationException, is(true));
+        }
     }
 }
